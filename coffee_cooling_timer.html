@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coffee Cooling Timer — Newton's Law</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #261e14;
+  --bg2:         #2f2418;
+  --bg3:         #3a2d1e;
+  --bg4:         #453628;
+  --bg5:         #1c1509;
+  --border:      rgba(210,160,90,0.16);
+  --border-md:   rgba(210,160,90,0.30);
+  --border-hi:   rgba(210,160,90,0.55);
+  --gold:        #D4924A;
+  --gold-dim:    #a06830;
+  --gold-bright: #F0B060;
+  --text:        #FDF6EC;
+  --text-soft:   #DDB98A;
+  --text-hint:   #B08860;
+  --accent-hot:  #E86030;
+  --accent-warm: #D89810;
+  --accent-ideal:#44A844;
+  --accent-cool: #38A0C8;
+  --accent-k:    #C06060;
+  --accent-e:    #50A878;
+  --accent-t:    #38A0C8;
+  --radius-sm:   10px;
+  --radius-md:   14px;
+  --radius-lg:   20px;
+  --shadow:      0 4px 24px rgba(0,0,0,0.35);
+  --shadow-sm:   0 2px 10px rgba(0,0,0,0.25);
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 3rem 1rem 6rem;
+  background-image: radial-gradient(ellipse 80% 40% at 50% 0%, rgba(180,100,30,0.08) 0%, transparent 70%);
+}
+
+.layout { max-width: 700px; margin: 0 auto; }
+
+/* Header */
+header { text-align: center; margin-bottom: 3rem; animation: headerRise 0.8s ease both; }
+@keyframes headerRise { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.header-eyebrow { font-family: 'Source Code Pro', monospace; font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; opacity: 0.85; }
+header h1 { font-family: 'Playfair Display', serif; font-style: italic; font-size: clamp(2.4rem, 6vw, 4rem); font-weight: 700; letter-spacing: -0.01em; line-height: 1.05; color: var(--text); margin-bottom: 10px; }
+header h1 em { font-style: normal; color: var(--gold); }
+.header-divider { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); margin: 16px auto; }
+.header-sub { font-family: 'Source Code Pro', monospace; font-size: 0.74rem; color: var(--text-hint); letter-spacing: 0.05em; max-width: 460px; margin: 0 auto; line-height: 1.75; }
+
+/* Cards */
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.75rem; margin-bottom: 1rem; box-shadow: var(--shadow-sm); transition: border-color 0.2s, box-shadow 0.2s; position: relative; overflow: hidden; }
+.card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, rgba(212,146,74,0.35), transparent); opacity: 0; transition: opacity 0.3s; }
+.card:focus-within { border-color: var(--border-md); box-shadow: 0 4px 28px rgba(0,0,0,0.4), 0 0 0 1px rgba(212,146,74,0.1); }
+.card:focus-within::before { opacity: 1; }
+
+.card-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: 1.4rem; display: flex; align-items: center; gap: 9px; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+.card-title i { font-size: 1.15rem; color: var(--gold); }
+.step-badge { margin-left: auto; background: var(--bg4); color: var(--text-soft); border: 1px solid var(--border-md); font-size: 0.68rem; font-weight: 500; padding: 4px 11px; border-radius: 20px; letter-spacing: 0.4px; font-family: 'Source Code Pro', monospace; }
+
+.hint-text { font-size: 0.92rem; color: var(--text-soft); line-height: 1.68; margin-bottom: 1.3rem; font-weight: 300; background: rgba(212,146,74,0.05); border-left: 2px solid rgba(212,146,74,0.3); padding: 0.65rem 0.95rem; border-radius: 0 6px 6px 0; }
+
+/* Inputs */
+.input-group { margin-bottom: 1.2rem; }
+.input-group:last-of-type { margin-bottom: 0; }
+label { display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem; font-weight: 500; color: var(--text-soft); margin-bottom: 10px; letter-spacing: 0.1px; }
+.slider-val { background: var(--bg4); border: 1px solid var(--border-md); color: var(--gold-bright); font-size: 0.8rem; font-weight: 600; padding: 3px 11px; border-radius: 7px; min-width: 56px; text-align: center; font-family: 'Source Code Pro', monospace; }
+
+input[type=range] { -webkit-appearance: none; width: 100%; height: 5px; border-radius: 5px; outline: none; cursor: pointer; background: var(--bg4); border: 1px solid var(--border); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: var(--gold); border: 2px solid var(--bg); border-radius: 50%; box-shadow: 0 0 0 2px var(--gold-dim), 0 2px 6px rgba(0,0,0,0.4); transition: transform 0.15s, background 0.15s; }
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); background: var(--gold-bright); }
+
+/* Error */
+.error-msg { color: var(--accent-hot); font-size: 0.82rem; margin-top: 10px; display: flex; align-items: center; gap: 6px; background: rgba(232,96,48,0.08); border: 1px solid rgba(232,96,48,0.22); border-radius: 8px; padding: 8px 12px; }
+.error-msg i { font-size: 1rem; flex-shrink: 0; }
+.hidden { display: none !important; }
+
+/* Primary button */
+.btn-primary { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; margin-bottom: 1rem; background: linear-gradient(135deg, var(--gold) 0%, #c07830 100%); color: var(--bg5); border: none; border-radius: var(--radius-md); padding: 16px; font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 600; letter-spacing: 0.3px; cursor: pointer; transition: filter 0.18s, transform 0.1s, box-shadow 0.18s; box-shadow: 0 4px 18px rgba(180,100,30,0.35); }
+.btn-primary i { font-size: 1.15rem; }
+.btn-primary:hover { filter: brightness(1.1); box-shadow: 0 6px 24px rgba(180,100,30,0.5); }
+.btn-primary:active { transform: scale(0.98); }
+
+/* Results */
+.results-section { display: none; }
+.results-section.visible { display: block; }
+
+/* Section header — shared across all result cards */
+.section-header { display: flex; align-items: center; gap: 9px; margin-bottom: 1.2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+.section-header i { font-size: 1.1rem; color: var(--gold); }
+.section-header-text { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--text); }
+.section-header-badge { margin-left: auto; font-size: 0.67rem; font-weight: 500; padding: 4px 10px; border-radius: 8px; }
+.ideal-badge { background: rgba(68,168,68,0.12); color: var(--accent-ideal); border: 1px solid rgba(68,168,68,0.25); }
+.math-badge { background: rgba(192,96,96,0.1); color: var(--accent-k); border: 1px solid rgba(192,96,96,0.22); font-family: 'Source Code Pro', monospace; letter-spacing: 0.05em; }
+
+/* k banner */
+.k-banner { background: linear-gradient(135deg, var(--bg3) 0%, var(--bg2) 100%); border: 1px solid var(--border-md); border-left: 3px solid var(--gold); border-radius: var(--radius-md); padding: 1.2rem 1.4rem; margin-bottom: 1rem; display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; box-shadow: var(--shadow-sm); }
+.k-banner-icon { width: 42px; height: 42px; background: rgba(212,146,74,0.1); border: 1px solid var(--border-md); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.k-banner-icon i { font-size: 1.3rem; color: var(--gold); }
+.k-label { font-size: 0.74rem; color: var(--text-hint); margin-bottom: 4px; font-family: 'Source Code Pro', monospace; letter-spacing: 0.04em; }
+.k-value { font-family: 'Playfair Display', serif; font-size: 1.35rem; color: var(--gold-bright); font-weight: 600; line-height: 1.1; }
+.k-explain { font-size: 0.82rem; color: var(--text-soft); margin-top: 4px; font-style: italic; }
+.k-badge { background: var(--bg4); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; text-align: center; }
+.k-badge-label { font-size: 0.6rem; color: var(--text-hint); display: block; font-family: 'Source Code Pro', monospace; letter-spacing: 0.08em; text-transform: uppercase; }
+.k-badge-val { font-size: 0.82rem; color: var(--gold); font-weight: 600; display: block; margin-top: 3px; font-family: 'Source Code Pro', monospace; }
+
+/* Live equation */
+.live-eq-bar { background: var(--bg5); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem 1.4rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 14px; }
+.live-eq-prefix { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-hint); white-space: nowrap; font-family: 'Source Code Pro', monospace; border-right: 1px solid var(--border); padding-right: 14px; }
+.live-eq-text { font-family: 'Source Code Pro', monospace; font-size: 0.95rem; color: var(--text); letter-spacing: 0.02em; }
+.live-eq-text .var-k { color: var(--accent-k); }
+.live-eq-text .var-t { color: var(--accent-t); }
+.live-eq-text .var-e { color: var(--accent-e); }
+
+/* Stat grid */
+.stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 1rem; }
+.stat-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.15rem 0.9rem; text-align: center; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
+.stat-box.hot  { border-top: 2px solid rgba(232,96,48,0.5); }
+.stat-box.warm { border-top: 2px solid rgba(216,152,16,0.5); }
+.stat-box.cool { border-top: 2px solid rgba(56,160,200,0.5); }
+.stat-icon-wrap { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; margin: 0 auto 9px; }
+.stat-box.hot  .stat-icon-wrap { background: rgba(232,96,48,0.12); }
+.stat-box.warm .stat-icon-wrap { background: rgba(216,152,16,0.12); }
+.stat-box.cool .stat-icon-wrap { background: rgba(56,160,200,0.12); }
+.stat-icon { font-size: 1.2rem; display: block; }
+.stat-box.hot  .stat-icon { color: var(--accent-hot); }
+.stat-box.warm .stat-icon { color: var(--accent-warm); }
+.stat-box.cool .stat-icon { color: var(--accent-cool); }
+.stat-label { font-size: 0.72rem; color: var(--text-hint); letter-spacing: 0.3px; display: block; margin-bottom: 4px; }
+.stat-val { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; color: var(--text); display: block; line-height: 1.2; }
+.stat-sub { font-size: 0.72rem; color: var(--text-soft); display: block; margin-top: 3px; }
+
+/* Chart */
+.chart-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.4rem 1.4rem 1.1rem; margin-bottom: 1rem; box-shadow: var(--shadow-sm); }
+
+/* Timeline */
+.timeline { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.4rem; margin-bottom: 1rem; box-shadow: var(--shadow-sm); }
+.tl-track { position: relative; padding-left: 32px; }
+.tl-track::before { content: ''; position: absolute; left: 11px; top: 8px; bottom: 8px; width: 1px; background: linear-gradient(180deg, var(--border-md), transparent); }
+.tl-item { position: relative; margin-bottom: 1.2rem; }
+.tl-item:last-child { margin-bottom: 0; }
+.tl-dot { position: absolute; left: -25px; top: 6px; width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--bg2); }
+.tl-dot.hot   { background: var(--accent-hot);   box-shadow: 0 0 0 3px rgba(232,96,48,0.18); }
+.tl-dot.warm  { background: var(--accent-warm);  box-shadow: 0 0 0 3px rgba(216,152,16,0.18); }
+.tl-dot.ideal { background: var(--accent-ideal); box-shadow: 0 0 0 3px rgba(68,168,68,0.18); }
+.tl-dot.cool  { background: var(--accent-cool);  box-shadow: 0 0 0 3px rgba(56,160,200,0.18); }
+.tl-time { font-size: 0.72rem; color: var(--text-hint); font-family: 'Source Code Pro', monospace; }
+.tl-desc { font-size: 0.97rem; color: var(--text); font-weight: 500; margin-top: 2px; }
+.tl-temp { font-size: 0.83rem; color: var(--text-soft); margin-top: 3px; line-height: 1.45; }
+
+/* Calculus box */
+.calculus-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); margin-bottom: 1rem; overflow: hidden; box-shadow: var(--shadow-sm); }
+.calculus-header { padding: 1.4rem; display: flex; align-items: center; gap: 10px; }
+.calculus-header i.lead { font-size: 1.1rem; color: var(--gold); }
+.calculus-header .toggle-label { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--text); flex: 1; }
+.calc-tag { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent-k); background: rgba(192,96,96,0.1); border: 1px solid rgba(192,96,96,0.2); padding: 3px 9px; border-radius: 5px; font-family: 'Source Code Pro', monospace; }
+.calculus-body { padding: 0 1.4rem 1.5rem; border-top: 1px solid var(--border); }
+.deriv-intro { font-size: 0.9rem; color: var(--text-soft); line-height: 1.7; padding: 1.1rem 0 1.2rem; font-weight: 300; font-style: italic; }
+.deriv-step { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 1.2rem; animation: fadeUp 0.35s ease both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+.deriv-step-num { min-width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%); color: var(--bg5); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-top: 1px; flex-shrink: 0; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+.deriv-step-body { flex: 1; }
+.deriv-step-body p { font-size: 0.86rem; color: var(--text-hint); margin-bottom: 8px; line-height: 1.6; }
+.formula { font-family: 'Source Code Pro', monospace; font-size: 0.84rem; color: var(--text); background: var(--bg5); border: 1px solid var(--border); padding: 9px 14px; border-radius: 8px; display: inline-block; line-height: 1.5; }
+.formula.highlight { border-color: rgba(210,160,90,0.45); color: var(--gold-bright); font-size: 0.92rem; padding: 11px 18px; background: rgba(180,100,30,0.08); }
+.formula .var-k { color: var(--accent-k); }
+.formula .var-t { color: var(--accent-t); }
+.formula .var-e { color: var(--accent-e); }
+.deriv-divider { border: none; border-top: 1px solid var(--border); margin: 1.1rem 0; }
+.deriv-legend { font-size: 0.84rem; color: var(--text-hint); line-height: 1.8; }
+.deriv-legend strong { color: var(--text-soft); font-weight: 500; }
+
+/* Formula reference box */
+.formula-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.4rem; margin-bottom: 1rem; box-shadow: var(--shadow-sm); }
+.formula-main { font-family: 'Playfair Display', serif; font-size: 1.18rem; color: var(--gold-bright); text-align: center; padding: 1rem; letter-spacing: 0.3px; border-radius: var(--radius-sm); background: rgba(180,100,30,0.07); border: 1px solid rgba(210,160,90,0.15); margin-bottom: 1rem; }
+.formula-vars { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 20px; font-size: 0.85rem; color: var(--text-soft); }
+.formula-vars span { display: flex; align-items: baseline; gap: 6px; }
+.formula-vars b { color: var(--gold); font-weight: 600; font-family: 'Source Code Pro', monospace; font-size: 0.82rem; }
+.formula-note { margin-top: 1rem; font-size: 0.85rem; color: var(--text-soft); line-height: 1.68; border-top: 1px solid var(--border); padding-top: 0.9rem; }
+.formula-note strong { color: var(--gold-dim); font-weight: 500; }
+
+/* Reset */
+.reset-wrap { margin-bottom: 2rem; }
+.btn-secondary { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: var(--bg2); color: var(--text-soft); border: 1px solid var(--border-md); border-radius: var(--radius-md); padding: 14px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: border-color 0.18s, color 0.18s, background 0.18s, box-shadow 0.18s; box-shadow: var(--shadow-sm); }
+.btn-secondary i { font-size: 1.1rem; color: var(--gold-dim); transition: color 0.18s, transform 0.3s; }
+.btn-secondary:hover { border-color: var(--border-hi); color: var(--text); background: var(--bg3); box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+.btn-secondary:hover i { color: var(--gold); transform: rotate(-45deg); }
+.btn-secondary:active { transform: scale(0.98); }
+
+@media (max-width: 520px) {
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .stat-box:nth-child(3) { grid-column: 1 / -1; }
+  .formula-vars { grid-template-columns: 1fr; }
+  .k-banner { grid-template-columns: auto 1fr; }
+  .k-badge { display: none; }
+  .live-eq-bar { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .live-eq-prefix { border-right: none; padding-right: 0; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<header>
+  <div class="header-eyebrow">MATH2A · Applied Calculus · Group Project</div>
+  <h1>Coffee Cooling <em>Timer</em></h1>
+  <div class="header-divider"></div>
+  <div class="header-sub">An interactive simulation of Newton's Law of Cooling — using derivatives and exponential decay to find the perfect drinking moment.</div>
+</header>
+
+<div class="card">
+  <div class="card-title">
+    <i class="ti ti-sun" aria-hidden="true"></i>
+    Initial conditions
+    <span class="step-badge">Step 1 of 3</span>
+  </div>
+  <div class="input-group">
+    <label>Room temperature <span class="slider-val" id="val-room">28&deg;C</span></label>
+    <input type="range" id="T_room" min="0" max="50" value="28" step="1">
+  </div>
+  <div class="input-group">
+    <label>Starting drink temperature <span class="slider-val" id="val-initial">90&deg;C</span></label>
+    <input type="range" id="T_initial" min="30" max="200" value="90" step="1">
+  </div>
+  <div id="err1" class="error-msg hidden"><i class="ti ti-alert-circle"></i><span></span></div>
+</div>
+
+<div class="card">
+  <div class="card-title">
+    <i class="ti ti-ruler-measure" aria-hidden="true"></i>
+    Calibration measurement
+    <span class="step-badge">Step 2 of 3</span>
+  </div>
+  <p class="hint-text">
+    Take one temperature reading after a known wait. This lets us calculate <em>k</em> &mdash; your drink&apos;s unique cooling rate &mdash; without guessing.
+  </p>
+  <div class="input-group">
+    <label>Time elapsed <span class="slider-val" id="val-tmeas">5 min</span></label>
+    <input type="range" id="t_measured" min="1" max="30" value="5" step="1">
+  </div>
+  <div class="input-group">
+    <label>Temperature at that time <span class="slider-val" id="val-Tmeas">70&deg;C</span></label>
+    <input type="range" id="T_measured" min="0" max="199" value="70" step="1">
+  </div>
+  <div id="err2" class="error-msg hidden"><i class="ti ti-alert-circle"></i><span></span></div>
+</div>
+
+<div class="card">
+  <div class="card-title">
+    <i class="ti ti-heart" aria-hidden="true"></i>
+    Your ideal drinking range
+    <span class="step-badge">Step 3 of 3</span>
+  </div>
+  <p class="hint-text">Most people enjoy coffee between <strong style="color:var(--gold-bright)">55&ndash;70&deg;C</strong>. Drag to your personal sweet spot.</p>
+  <div class="input-group">
+    <label>Lower ideal limit <span class="slider-val" id="lo-val">55&deg;C</span></label>
+    <input type="range" id="slider-ideal-lo" min="30" max="80" value="55" step="1">
+  </div>
+  <div class="input-group">
+    <label>Upper ideal limit <span class="slider-val" id="hi-val">70&deg;C</span></label>
+    <input type="range" id="slider-ideal-hi" min="31" max="100" value="70" step="1">
+  </div>
+  <div id="err3" class="error-msg hidden"><i class="ti ti-alert-circle"></i><span></span></div>
+</div>
+
+<button class="btn-primary" onclick="calculate()">
+  <i class="ti ti-calculator" aria-hidden="true"></i>
+  Calculate my cooling timeline
+</button>
+
+<div class="results-section" id="results">
+
+  <div class="k-banner">
+    <div class="k-banner-icon"><i class="ti ti-variable" aria-hidden="true"></i></div>
+    <div>
+      <div class="k-label">Cooling rate constant derived from calibration</div>
+      <div class="k-value" id="k-val-display"></div>
+      <div class="k-explain" id="k-explain-text"></div>
+    </div>
+    <div class="k-badge">
+      <span class="k-badge-label">Units</span>
+      <span class="k-badge-val">min&sup1;</span>
+    </div>
+  </div>
+
+  <div class="live-eq-bar">
+    <div class="live-eq-prefix">Live Eq.</div>
+    <div class="live-eq-text" id="live-eq-text">T(t) = T_room + (T<sub>0</sub> &minus; T_room) &middot; e^(&minus;kt)</div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-box hot">
+      <div class="stat-icon-wrap"><i class="ti ti-flame stat-icon" aria-hidden="true"></i></div>
+      <span class="stat-label">Starts ideal at</span>
+      <span class="stat-val" id="stat-start">&mdash;</span>
+      <span class="stat-sub">after brewing</span>
+    </div>
+    <div class="stat-box warm">
+      <div class="stat-icon-wrap"><i class="ti ti-coffee stat-icon" aria-hidden="true"></i></div>
+      <span class="stat-label">Ideal window</span>
+      <span class="stat-val" id="stat-window">&mdash;</span>
+      <span class="stat-sub">to enjoy it</span>
+    </div>
+    <div class="stat-box cool">
+      <div class="stat-icon-wrap"><i class="ti ti-snowflake stat-icon" aria-hidden="true"></i></div>
+      <span class="stat-label">Too cool by</span>
+      <span class="stat-val" id="stat-end">&mdash;</span>
+      <span class="stat-sub">after brewing</span>
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="section-header">
+      <i class="ti ti-chart-line" aria-hidden="true"></i>
+      <span class="section-header-text">Cooling curve</span>
+      <span class="section-header-badge ideal-badge" id="ideal-band-label"></span>
+    </div>
+    <canvas id="coolingChart" height="210"></canvas>
+  </div>
+
+  <div class="timeline">
+    <div class="section-header">
+      <i class="ti ti-list-check" aria-hidden="true"></i>
+      <span class="section-header-text">Your drink timeline</span>
+    </div>
+    <div class="tl-track" id="timeline-items"></div>
+  </div>
+
+  <div class="calculus-box">
+    <div class="calculus-header">
+      <i class="ti ti-math-function lead" aria-hidden="true"></i>
+      <span class="toggle-label">Calculus concept applied</span>
+      <span class="calc-tag">Derivation</span>
+    </div>
+    <div class="calculus-body" id="calculus-body">
+      <p class="deriv-intro">This timer is powered by Newton&apos;s Law of Cooling &mdash; a first-order differential equation. Here&apos;s how we go from the physics principle all the way to the formula your coffee uses.</p>
+
+      <div class="deriv-step" style="animation-delay:0.00s">
+        <div class="deriv-step-num">1</div>
+        <div class="deriv-step-body">
+          <p>Start with the base differential equation. The rate of temperature change is proportional to the difference between the object&apos;s temperature T and the surrounding room temperature T<sub>room</sub>.</p>
+          <div class="formula">dT/dt = <span class="var-k">k</span>(<span class="var-t">T</span> &minus; T<sub>room</sub>)</div>
+        </div>
+      </div>
+
+      <div class="deriv-step" style="animation-delay:0.05s">
+        <div class="deriv-step-num">2</div>
+        <div class="deriv-step-body">
+          <p>Separate variables &mdash; move all T terms to the left, all t terms to the right:</p>
+          <div class="formula">dT / (<span class="var-t">T</span> &minus; T<sub>room</sub>) = <span class="var-k">k</span> dt</div>
+        </div>
+      </div>
+
+      <div class="deriv-step" style="animation-delay:0.10s">
+        <div class="deriv-step-num">3</div>
+        <div class="deriv-step-body">
+          <p>Integrate both sides:</p>
+          <div class="formula">&int; dT/(<span class="var-t">T</span> &minus; T<sub>room</sub>) = &int; <span class="var-k">k</span> dt</div>
+        </div>
+      </div>
+
+      <div class="deriv-step" style="animation-delay:0.15s">
+        <div class="deriv-step-num">4</div>
+        <div class="deriv-step-body">
+          <p>Left side integrates to a natural log; right side to kt + C:</p>
+          <div class="formula">ln|<span class="var-t">T</span> &minus; T<sub>room</sub>| = <span class="var-k">k</span>t + C</div>
+        </div>
+      </div>
+
+      <div class="deriv-step" style="animation-delay:0.20s">
+        <div class="deriv-step-num">5</div>
+        <div class="deriv-step-body">
+          <p>Exponentiate both sides to remove the natural log:</p>
+          <div class="formula"><span class="var-t">T</span> &minus; T<sub>room</sub> = <span class="var-e">e</span><sup>kt+C</sup> = C<sub>1</sub><span class="var-e">e</span><sup><span class="var-k">k</span>t</sup></div>
+        </div>
+      </div>
+
+      <div class="deriv-step" style="animation-delay:0.25s">
+        <div class="deriv-step-num">6</div>
+        <div class="deriv-step-body">
+          <p>Apply the initial condition: at t = 0, T = T<sub>0</sub>, so C<sub>1</sub> = T<sub>0</sub> &minus; T<sub>room</sub>. This gives the <strong style="color:var(--gold)">standard formula</strong>:</p>
+          <div class="formula highlight"><span class="var-t">T</span>(t) = T<sub>room</sub> + (T<sub>0</sub> &minus; T<sub>room</sub>) &middot; <span class="var-e">e</span><sup>&minus;<span class="var-k">k</span>t</sup></div>
+        </div>
+      </div>
+
+      <div class="deriv-step" style="animation-delay:0.30s">
+        <div class="deriv-step-num">7</div>
+        <div class="deriv-step-body">
+          <p>To find <em>k</em> from your calibration reading T<sub>M</sub> at time t<sub>M</sub>, rearrange and apply the natural logarithm:</p>
+          <div class="formula"><span class="var-k">k</span> = &minus;ln[(T<sub>M</sub> &minus; T<sub>room</sub>) / (T<sub>0</sub> &minus; T<sub>room</sub>)] / t<sub>M</sub></div>
+        </div>
+      </div>
+
+      <hr class="deriv-divider">
+      <div class="deriv-legend">
+        <strong>T(t)</strong> temperature at time t &nbsp;&middot;&nbsp;
+        <strong>T<sub>0</sub></strong> initial temperature &nbsp;&middot;&nbsp;
+        <strong style="color:var(--accent-k)">k</strong> cooling constant &nbsp;&middot;&nbsp;
+        <strong style="color:var(--accent-t)">T<sub>room</sub></strong> ambient temperature &nbsp;&middot;&nbsp;
+        <strong style="color:var(--accent-e)">e</strong> Euler&apos;s number &asymp; 2.718
+      </div>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="section-header" style="margin-bottom: 1.1rem;">
+      <i class="ti ti-math-function" aria-hidden="true"></i>
+      <span class="section-header-text">Standard formula used</span>
+      <span class="section-header-badge math-badge">Newton&apos;s Law</span>
+    </div>
+    <div class="formula-main">T(t) = T_room + (T<sub>0</sub> &minus; T_room) &middot; e^(&minus;kt)</div>
+    <div class="formula-vars">
+      <span><b>T(t)</b> temperature at time t</span>
+      <span><b>T<sub>0</sub></b> initial temperature</span>
+      <span><b>T_room</b> ambient temperature</span>
+      <span><b>k</b> cooling rate constant</span>
+      <span><b>t</b> time in minutes</span>
+      <span><b>e</b> Euler&apos;s number &asymp; 2.718</span>
+    </div>
+    <div class="formula-note">
+      <strong>How k is derived:</strong>
+      Rearranging Newton&apos;s Law of Cooling using your calibration point:
+      <em>k = &minus;ln[(T_measured &minus; T_room) / (T<sub>0</sub> &minus; T_room)] / t</em> &mdash; this uses the natural logarithm, a core Calculus concept.
+    </div>
+  </div>
+
+  <div class="reset-wrap">
+    <button class="btn-secondary" onclick="resetAll()">
+      <i class="ti ti-refresh" aria-hidden="true"></i> Start over
+    </button>
+  </div>
+
+</div>
+</div>
+
+<script>
+let chartInstance = null;
+
+function bind(id, displayId, fmt) {
+  const el = document.getElementById(id);
+  const out = document.getElementById(displayId);
+  el.addEventListener('input', () => { out.textContent = fmt(el.value); });
+}
+bind('T_room',          'val-room',    v => v + '\u00b0C');
+bind('T_initial',       'val-initial', v => v + '\u00b0C');
+bind('t_measured',      'val-tmeas',   v => v + ' min');
+bind('T_measured',      'val-Tmeas',   v => v + '\u00b0C');
+bind('slider-ideal-lo', 'lo-val',      v => v + '\u00b0C');
+bind('slider-ideal-hi', 'hi-val',      v => v + '\u00b0C');
+
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  el.classList.remove('hidden');
+  el.querySelector('span').textContent = msg;
+}
+function clearErr(id) { document.getElementById(id).classList.add('hidden'); }
+
+function Tcool(t, T0, Tr, k) { return Tr + (T0 - Tr) * Math.exp(-k * t); }
+function timeToTemp(target, T0, Tr, k) {
+  if (target <= Tr) return Infinity;
+  if (target >= T0) return 0;
+  return -Math.log((target - Tr) / (T0 - Tr)) / k;
+}
+function fmtMin(m) {
+  if (!isFinite(m) || m < 0) return '\u2014';
+  const mins = Math.round(m);
+  if (mins === 0) return 'right away';
+  if (mins < 60) return mins + ' min';
+  const h = Math.floor(mins / 60), r = mins % 60;
+  return h + 'h' + (r > 0 ? ' ' + r + 'min' : '');
+}
+
+function calculate() {
+  ['err1','err2','err3'].forEach(clearErr);
+  let valid = true;
+  const Tr   = parseInt(document.getElementById('T_room').value);
+  const T0   = parseInt(document.getElementById('T_initial').value);
+  const tM   = parseInt(document.getElementById('t_measured').value);
+  const TM   = parseInt(document.getElementById('T_measured').value);
+  const idLo = parseInt(document.getElementById('slider-ideal-lo').value);
+  const idHi = parseInt(document.getElementById('slider-ideal-hi').value);
+
+  if (T0 <= Tr)  { showErr('err1', 'Initial drink temperature must be higher than room temperature.'); valid = false; }
+  if (TM >= T0)  { showErr('err2', 'Calibration temperature must be lower than the starting temperature.'); valid = false; }
+  else if (TM <= Tr) { showErr('err2', 'Calibration temperature must be above room temperature.'); valid = false; }
+  if (idLo >= idHi) { showErr('err3', 'Lower ideal limit must be less than the upper limit.'); valid = false; }
+  if (!valid) return;
+
+  const k   = -Math.log((TM - Tr) / (T0 - Tr)) / tM;
+  const tHi = timeToTemp(idHi, T0, Tr, k);
+  const tLo = timeToTemp(idLo, T0, Tr, k);
+
+  document.getElementById('k-val-display').textContent = 'k = ' + k.toFixed(4) + ' min\u207b\u00b9';
+  document.getElementById('k-explain-text').textContent =
+    'Loses ' + (k * 100).toFixed(2) + '% of temperature difference per minute. ' +
+    (k > 0.05 ? 'Fast cooler \u2014 thin cup or large surface.' :
+     k > 0.02 ? 'Moderate cooler \u2014 typical ceramic mug.' :
+                'Slow cooler \u2014 insulated tumbler or thick walls.');
+
+  document.getElementById('live-eq-text').innerHTML =
+    'T(t) = ' + Tr + ' + (' + T0 + ' \u2212 ' + Tr + ') \u00b7 e<sup>\u2212' + k.toFixed(4) + '\u00b7t</sup>';
+
+  document.getElementById('stat-start').textContent  = isFinite(tHi) ? fmtMin(tHi) : 'Ideal now';
+  const win = isFinite(tLo) && isFinite(tHi) ? Math.max(0, Math.round(tLo - tHi)) : null;
+  document.getElementById('stat-window').textContent = win !== null ? win + ' min' : '\u2014';
+  document.getElementById('stat-end').textContent    = isFinite(tLo) ? fmtMin(tLo) : 'Stays warm';
+  document.getElementById('ideal-band-label').textContent = idLo + '\u2013' + idHi + '\u00b0C ideal zone';
+
+  const maxT = Math.ceil(Math.max(isFinite(tLo) ? tLo * 1.3 : 0, tM * 2, 30));
+  const labels = [], data = [];
+  for (let t = 0; t <= maxT; t += 0.5) {
+    labels.push(t.toFixed(1));
+    data.push(parseFloat(Tcool(t, T0, Tr, k).toFixed(1)));
+  }
+
+  if (chartInstance) chartInstance.destroy();
+  const ctx = document.getElementById('coolingChart').getContext('2d');
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Temperature (\u00b0C)', data, borderColor: '#D4924A', borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 5, pointHoverBackgroundColor: '#F0B060', tension: 0.4, fill: false, order: 1 },
+        { label: 'Upper ideal (' + idHi + '\u00b0C)', data: labels.map(() => idHi), borderColor: 'rgba(68,168,68,0.7)', borderWidth: 1.5, borderDash: [6,4], pointRadius: 0, fill: false, order: 2 },
+        { label: 'Lower ideal (' + idLo + '\u00b0C)', data: labels.map(() => idLo), borderColor: 'rgba(56,160,200,0.7)', borderWidth: 1.5, borderDash: [6,4], pointRadius: 0, fill: false, order: 3 }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: true, position: 'bottom', labels: { font: { family: 'DM Sans', size: 11 }, color: '#DDB98A', padding: 16, boxWidth: 24, usePointStyle: true, pointStyle: 'line' } },
+        tooltip: { backgroundColor: '#3a2d1e', borderColor: 'rgba(210,160,90,0.35)', borderWidth: 1, titleColor: '#FDF6EC', bodyColor: '#DDB98A', titleFont: { family: 'DM Sans', size: 12, weight: '500' }, bodyFont: { family: 'DM Sans', size: 11 }, padding: 12,
+          callbacks: { title: items => 't = ' + items[0].label + ' min', label: item => ' ' + item.dataset.label + ': ' + item.raw + '\u00b0C' } }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Time (minutes)', color: '#B08860', font: { family: 'DM Sans', size: 11 } }, ticks: { color: '#B08860', font: { family: 'DM Sans', size: 10 }, maxTicksLimit: 10 }, grid: { color: 'rgba(210,160,90,0.06)' } },
+        y: { title: { display: true, text: 'Temperature (\u00b0C)', color: '#B08860', font: { family: 'DM Sans', size: 11 } }, ticks: { color: '#B08860', font: { family: 'DM Sans', size: 10 }, callback: v => v + '\u00b0' }, grid: { color: 'rgba(210,160,90,0.06)' } }
+      }
+    }
+  });
+
+  const tl = document.getElementById('timeline-items');
+  tl.innerHTML = '';
+  const events = [
+    { time: 0,  label: 'Freshly brewed',    temp: T0 + '\u00b0C', dot: 'hot',  desc: 'Too hot to drink safely \u2014 let it rest.' },
+    { time: tM, label: 'Calibration check', temp: TM + '\u00b0C', dot: 'warm', desc: 'Your measured reading used to derive k.' }
+  ];
+  if (isFinite(tHi))
+    events.push({ time: tHi, label: 'Enters ideal zone', temp: idHi + '\u00b0C', dot: 'ideal', desc: 'Perfect time to start drinking!' });
+  else if (T0 <= idHi)
+    events.push({ time: 0, label: 'Already in ideal zone', temp: T0 + '\u00b0C', dot: 'ideal', desc: 'Drink right away \u2014 starts within range.' });
+  if (isFinite(tLo))
+    events.push({ time: tLo, label: 'Exits ideal zone', temp: idLo + '\u00b0C', dot: 'cool', desc: 'Getting too cool \u2014 drink before this point.' });
+  const halfLife = Math.log(2) / k;
+  events.push({ time: halfLife, label: 'Cooling half-life', temp: (Tr + (T0 - Tr) / 2).toFixed(1) + '\u00b0C', dot: 'warm', desc: 'Halfway to room temperature \u2014 a key Calculus milestone.' });
+  events.sort((a, b) => a.time - b.time);
+  events.forEach(ev => {
+    const d = document.createElement('div');
+    d.className = 'tl-item';
+    d.innerHTML =
+      '<div class="tl-dot ' + ev.dot + '"></div>' +
+      '<div class="tl-time">' + (ev.time === 0 ? 't = 0 min' : 't \u2248 ' + ev.time.toFixed(1) + ' min') + '</div>' +
+      '<div class="tl-desc">' + ev.label + '</div>' +
+      '<div class="tl-temp">' + ev.temp + ' \u2014 ' + ev.desc + '</div>';
+    tl.appendChild(d);
+  });
+
+  document.getElementById('results').classList.add('visible');
+  setTimeout(() => document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+}
+
+function resetAll() {
+  document.getElementById('T_room').value = 28;      document.getElementById('val-room').textContent    = '28\u00b0C';
+  document.getElementById('T_initial').value = 90;   document.getElementById('val-initial').textContent = '90\u00b0C';
+  document.getElementById('t_measured').value = 5;   document.getElementById('val-tmeas').textContent   = '5 min';
+  document.getElementById('T_measured').value = 70;  document.getElementById('val-Tmeas').textContent   = '70\u00b0C';
+  document.getElementById('slider-ideal-lo').value = 55; document.getElementById('lo-val').textContent  = '55\u00b0C';
+  document.getElementById('slider-ideal-hi').value = 70; document.getElementById('hi-val').textContent  = '70\u00b0C';
+  ['err1','err2','err3'].forEach(clearErr);
+  document.getElementById('results').classList.remove('visible');
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
